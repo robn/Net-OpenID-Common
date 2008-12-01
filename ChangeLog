@@ -5,4 +5,8 @@
     * Fix potential timing attack when checking signatures (Adam Sjøgren)
       (see http://lists.openid.net/pipermail/openid-security/2010-July/001156.html)
 
+    * In Net::OpenID::Yadis, use the single-constant form of
+      "use constant" so we work under Perl 5.6 where the multi constant form
+      was not available.
+
     * Initial version with stuff moved out of Net::OpenID::Consumer.
