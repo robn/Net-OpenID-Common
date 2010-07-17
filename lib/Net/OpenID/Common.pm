@@ -206,5 +206,19 @@ sub arg2bi {
     return bytes2bi(MIME::Base64::decode_base64($_[0]));
 }
 
+sub timing_indep_eq {
+    my ($x, $y)=@_;
+
+    return '' if length($x)!=length($y);
+
+    my $n=length($x);
+
+    my $result=0;
+    for (my $i=0; $i<$n; $i++) {
+        $result |= ord(substr($x, $i, 1)) ^ ord(substr($y, $i, 1));
+    }
+
+    return !$result;
+}
 
 1;
