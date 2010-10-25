@@ -1,1 +1,6 @@
-        * Initial version with stuff moved out of Net::OpenID::Consumer.
+1.10:
+
+    * Fix potential timing attack when checking signatures (Adam Sjøgren)
+      (see http://lists.openid.net/pipermail/openid-security/2010-July/001156.html)
+
+    * Initial version with stuff moved out of Net::OpenID::Consumer.
