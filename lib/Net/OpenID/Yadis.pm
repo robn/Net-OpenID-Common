@@ -2,8 +2,6 @@ package Net::OpenID::Yadis;
 
 use strict;
 use warnings;
-use vars qw($VERSION @EXPORT);
-$VERSION = "0.05";
 
 use base qw(Exporter);
 use Carp ();
@@ -11,7 +9,7 @@ use Net::OpenID::URIFetch;
 use XML::Simple;
 use Net::OpenID::Yadis::Service;
 
-@EXPORT = qw(YR_HEAD YR_GET YR_XRDS);
+our @EXPORT = qw(YR_HEAD YR_GET YR_XRDS);
 
 use constant YR_GET => 1;
 use constant YR_XRDS => 2;

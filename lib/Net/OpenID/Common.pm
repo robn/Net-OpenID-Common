@@ -1,8 +1,6 @@
 
 package Net::OpenID::Common;
 
-$VERSION = 1.10;
-
 =head1 NAME
 
 Net::OpenID::Common - Libraries shared between L<Net::OpenID::Consumer> and L<Net::OpenID::Server>
