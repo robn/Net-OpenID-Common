@@ -40,7 +40,7 @@ sub new {
         $getter = sub { $get{$_[0]}; };
         $enumer = sub { keys(%get); };
     }
-    elsif (ref $what eq "Apache::Request") || ($ref $what eq "Apache2::Request") {
+    elsif ((ref $what eq "Apache::Request") || (ref $what eq "Apache2::Request")) {
         # Apache::Request includes the POST and GET arguments in ->param
         # when doing a POST request, which is close enough to what
         # the spec requires.
