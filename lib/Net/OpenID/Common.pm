@@ -27,6 +27,9 @@ Maintained by Martin Atkins <mart@degeneration.co.uk>
 package OpenID::util;
 
 use Crypt::DH::GMP;
+use Math::BigInt;
+use Time::Local ();
+use MIME::Base64 ();
 
 use constant VERSION_1_NAMESPACE => "http://openid.net/signon/1.1";
 use constant VERSION_2_NAMESPACE => "http://specs.openid.net/auth/2.0";
