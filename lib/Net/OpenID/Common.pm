@@ -151,8 +151,11 @@ sub w3c_to_time {
     return $time;
 }
 
-sub bi2bytes {
-    my $bigint = shift;
+sub int2bytes {
+    my ($int) = @_;
+
+    my $bigint = Math::BigInt->new($int);
+
     die "Can't deal with negative numbers" if $bigint->is_negative;
 
     my $bits = $bigint->as_bin;
@@ -165,8 +168,8 @@ sub bi2bytes {
     return pack("B*", $bits);
 }
 
-sub bi2arg {
-    return b64(bi2bytes($_[0]));
+sub int2arg {
+    return b64(int2bytes($_[0]));
 }
 
 sub b64 {
@@ -179,16 +182,17 @@ sub d64 {
     return MIME::Base64::decode_base64($_[0]);
 }
 
-sub bytes2bi {
-    return Math::BigInt->new("0b" . unpack("B*", $_[0]));
+sub bytes2int {
+    return Math::BigInt->new("0b" . unpack("B*", $_[0]))->bstr;
 }
 
-sub arg2bi {
-    return undef unless defined $_[0] and $_[0] ne "";
+sub arg2int {
+    my ($arg) = @_;
+    return undef unless defined $arg and $arg ne "";
     # don't acccept base-64 encoded numbers over 700 bytes.  which means
     # those over 4200 bits.
-    return Math::BigInt->new("0") if length($_[0]) > 700;
-    return bytes2bi(MIME::Base64::decode_base64($_[0]));
+    return 0 if length($arg) > 700;
+    return bytes2int(MIME::Base64::decode_base64($arg));
 }
 
 sub timing_indep_eq {
