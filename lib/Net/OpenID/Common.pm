@@ -26,6 +26,8 @@ Maintained by Martin Atkins <mart@degeneration.co.uk>
 # like this to avoid confusion.
 package OpenID::util;
 
+use Crypt::DH::GMP;
+
 use constant VERSION_1_NAMESPACE => "http://openid.net/signon/1.1";
 use constant VERSION_2_NAMESPACE => "http://specs.openid.net/auth/2.0";
 
@@ -217,6 +219,20 @@ sub timing_indep_eq {
     }
 
     return !$result;
+}
+
+sub get_dh {
+    my ($p, $g) = @_;
+
+    $p ||= "155172898181473697471232257763715539915724801966915404479707795314057629378541917580651227423698188993727816152646631438561595825688188889951272158842675419950341258706556549803580104870537681476726513255747040765857479291291572334510643245094715007229621094194349783925984760375594985848253359305585439638443";
+    $g ||= "2";
+
+    return if $p <= 10 or $g <= 1;
+
+    my $dh = Crypt::DH::GMP->new(p => $p, g => $g);
+    $dh->generate_keys;
+
+    return $dh;
 }
 
 1;
