@@ -52,24 +52,6 @@ sub version_2_identifier_select_url {
     return "http://specs.openid.net/auth/2.0/identifier_select";
 }
 
-# From Digest::HMAC
-sub hmac_sha1_hex {
-    unpack("H*", &hmac_sha1);
-}
-sub hmac_sha1 {
-    hmac($_[0], $_[1], \&Digest::SHA1::sha1, 64);
-}
-sub hmac {
-    my($data, $key, $hash_func, $block_size) = @_;
-    $block_size ||= 64;
-    $key = &$hash_func($key) if length($key) > $block_size;
-
-    my $k_ipad = $key ^ (chr(0x36) x $block_size);
-    my $k_opad = $key ^ (chr(0x5c) x $block_size);
-
-    &$hash_func($k_opad, &$hash_func($k_ipad, $data));
-}
-
 sub parse_keyvalue {
     my $reply = shift;
     my %ret;
