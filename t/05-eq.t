@@ -42,5 +42,5 @@ sub compare_comparisons {
     # warnings as eq when faced with undefs, and then we should test
     # the warnings. that seems like too much effort
 
-    is( ($first eq $second), eval { OpenID::util::timing_indep_eq($first, $second) } , $description);
+    is( ($first eq $second), OpenID::util::timing_indep_eq($first, $second) , $description);
 }
