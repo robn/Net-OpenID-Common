@@ -3,7 +3,7 @@ package Net::OpenID::Common;
 
 =head1 NAME
 
-Net::OpenID::Common - Libraries shared between L<Net::OpenID::Consumer> and L<Net::OpenID::Server>
+Net::OpenID::Common - Libraries shared between Net::OpenID::Consumer and Net::OpenID::Server
 
 =head1 DESCRIPTION
 

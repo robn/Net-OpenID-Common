@@ -1,5 +1,7 @@
 {{$NEXT}}
 
+    * Documentation tweaks (Robert Norris)
+
 1.030099_001 Nov 06 2010
 
     * Support for Apache2::Request (mod_perl 2) (Yitzchak Scott-Thoennes)
