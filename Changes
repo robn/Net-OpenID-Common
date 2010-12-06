@@ -1,6 +1,8 @@
 {{$NEXT}}
 
     * Documentation tweaks (Robert Norris)
+    
+    * Remove use of $& (Jess Robinson RT#63684)
 
 1.030099_001 Nov 06 2010
 

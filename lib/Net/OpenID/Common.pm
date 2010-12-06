@@ -69,7 +69,7 @@ sub parse_keyvalue {
 sub ejs
 {
     my $a = $_[0];
-    $a =~ s/[\"\'\\]/\\$&/g;
+    $a =~ s/([\"\'\\])/\\$1/g;
     $a =~ s/\r?\n/\\n/gs;
     $a =~ s/\r//;
     return $a;
