@@ -30,6 +30,7 @@ use Crypt::DH::GMP;
 use Math::BigInt;
 use Time::Local ();
 use MIME::Base64 ();
+use JSON qw(encode_json);
 
 use constant VERSION_1_NAMESPACE => "http://openid.net/signon/1.1";
 use constant VERSION_2_NAMESPACE => "http://specs.openid.net/auth/2.0";
@@ -66,33 +67,10 @@ sub parse_keyvalue {
     return %ret;
 }
 
-sub ejs
-{
-    my $a = $_[0];
-    $a =~ s/([\"\'\\])/\\$1/g;
-    $a =~ s/\r?\n/\\n/gs;
-    $a =~ s/\r//;
-    return $a;
-}
-
 # Data::Dumper for JavaScript
 sub js_dumper {
     my $obj = shift;
-    if (ref $obj eq "HASH") {
-        my $ret = "{";
-        foreach my $k (keys %$obj) {
-            $ret .= "$k: " . js_dumper($obj->{$k}) . ",";
-        }
-        chop $ret;
-        $ret .= "}";
-        return $ret;
-    } elsif (ref $obj eq "ARRAY") {
-        my $ret = "[" . join(", ", map { js_dumper($_) } @$obj) . "]";
-        return $ret;
-    } else {
-        return $obj if $obj =~ /^\d+$/;
-        return "\"" . ejs($obj) . "\"";
-    }
+    return encode_json($obj);
 }
 
 sub eurl
