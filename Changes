@@ -1,5 +1,7 @@
 {{$NEXT}}
 
+1.030099_003 Jan 01 2011
+
     * Replace URL escaper with calls to URI::Escape (Robert Norris)
 
     * Removed JSON encoder in favour of using JSON::encode_json directly in
