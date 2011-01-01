@@ -30,6 +30,7 @@ use Crypt::DH::GMP;
 use Math::BigInt;
 use Time::Local ();
 use MIME::Base64 ();
+use URI::Escape ();
 
 use constant VERSION_1_NAMESPACE => "http://openid.net/signon/1.1";
 use constant VERSION_2_NAMESPACE => "http://specs.openid.net/auth/2.0";
@@ -83,7 +84,7 @@ sub push_url_arg {
         my $key = shift;
         my $value = shift;
         $$uref .= $got_qmark ? "&" : ($got_qmark = 1, "?");
-        $$uref .= eurl($key) . "=" . eurl($value);
+        $$uref .= URI::Escape::uri_escape($key) . "=" . URI::Escape::uri_escape($value);
     }
 }
 
