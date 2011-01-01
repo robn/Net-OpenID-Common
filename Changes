@@ -1,5 +1,8 @@
 {{$NEXT}}
 
+    * Removed JSON encoder in favour of using JSON::encode_json directly in
+      N::O::Server and N::O::Consumer (Robert Norris)
+
 1.030099_002 Dec 07 2010
 
     * Documentation tweaks (Robert Norris)
