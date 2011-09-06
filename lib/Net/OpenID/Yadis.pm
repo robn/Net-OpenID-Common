@@ -8,6 +8,7 @@ use Carp ();
 use Net::OpenID::URIFetch;
 use XML::Simple;
 use Net::OpenID::Yadis::Service;
+use Net::OpenID::Common;
 
 our @EXPORT = qw(YR_HEAD YR_GET YR_XRDS);
 
@@ -108,12 +109,7 @@ sub _get_contents {
     my $self = shift;
     my  ($url, $final_url_ref, $content_ref, $headers_ref) = @_;
 
-    my $alter_hook = sub {
-        my $htmlref = shift;
-        $$htmlref =~ s/<body\b.*//is;
-    };
-
-    my $res = Net::OpenID::URIFetch->fetch($url, $self->consumer, $alter_hook);
+    my $res = Net::OpenID::URIFetch->fetch($url, $self->consumer, \&OpenID::util::_extract_head_markup_only);
 
     if ($res) {
         $$final_url_ref = $res->final_uri;

@@ -196,4 +196,22 @@ sub get_dh {
     return $dh;
 }
 
+# HTML parsing
+sub _extract_head_markup_only {
+    my $htmlref = shift;
+
+    # kill all CDATA sections
+    $$htmlref =~ s/<!\[CDATA\[.*?\]\]>//sg;
+
+    # kill all comments
+    $$htmlref =~ s/<!--.*?-->//sg;
+    # ***FIX?*** Strictly speaking, SGML comments must have matched
+    # pairs of '--'s but almost nobody checks for this or even knows 
+
+    # trim everything past the body.  this is in case the user doesn't
+    # have a head document and somebody was able to inject their own
+    # head.  -- brad choate
+    $$htmlref =~ s/<body\b.*//is;
+}
+
 1;
