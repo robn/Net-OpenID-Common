@@ -1,5 +1,7 @@
 {{$NEXT}}
 
+1.030099_004 Oct 20 2011
+
     * Improved HTML head extraction to skip CDATA and comments (Roger Crew)
 
     * Fixed warning behavior of timing_indep_eq (Roger Crew)
