@@ -2,6 +2,8 @@
 
     * Improved HTML head extraction to skip CDATA and comments (Roger Crew)
 
+    * Fixed warning behavior of timing_indep_eq (Roger Crew)
+
 1.030099_003 Jan 01 2011
 
     * Replace URL escaper with calls to URI::Escape (Robert Norris)

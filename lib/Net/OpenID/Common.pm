@@ -168,7 +168,10 @@ sub arg2int {
 }
 
 sub timing_indep_eq {
+    no warnings 'uninitialized';
     my ($x, $y)=@_;
+    warnings::warn('uninitialized','Use of uninitialized value in timing_indep_eq')
+	if (warnings::enabled('uninitialized') && !(defined($x) && defined($y)));
 
     return '' if length($x)!=length($y);
 

@@ -37,10 +37,11 @@ compare_comparisons(undef, undef, 'both undef');
 sub compare_comparisons {
     my ($first, $second, $description)=@_;
 
-    # XXX undefs make icky warnings but still need to be tested.
-    # possibly we should make timing_indep_eq produce exactly the same
-    # warnings as eq when faced with undefs, and then we should test
-    # the warnings. that seems like too much effort
+    # XXX may still want to test that the circumstances under
+    # which eq and timing_indep_eq produce warnings are the same
 
-    is( ($first eq $second), OpenID::util::timing_indep_eq($first, $second) , $description);
+    no warnings 'uninitialized';
+    is( ($first eq $second),
+        OpenID::util::timing_indep_eq($first, $second),
+        $description);
 }
