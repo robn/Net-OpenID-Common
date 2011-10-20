@@ -1,5 +1,7 @@
 {{$NEXT}}
 
+    * Improved HTML head extraction to skip CDATA and comments (Roger Crew)
+
 1.030099_003 Jan 01 2011
 
     * Replace URL escaper with calls to URI::Escape (Robert Norris)
