@@ -209,7 +209,7 @@ Net::OpenID::IndirectMessage - Class representing a collection of namespaced arg
 This class acts as an abstraction layer over a collection of flat URL arguments
 which supports namespaces as defined by the OpenID Auth 2.0 specification.
 
-It also recognises when its is given OpenID 1.1 non-namespaced arguments and
+It also recognises when it is given OpenID 1.1 non-namespaced arguments and
 acts as if the relevant namespaces were present. In this case, it only
 supports the basic OpenID 1.1 arguments and the extension arguments
 for Simple Registration.
@@ -228,26 +228,26 @@ module will do the right thing automatically.
 =head1 SYNOPSIS
 
     use Net::OpenID::IndirectMessage;
-    
+
     # Pass in something suitable for the underlying flat dictionary.
     # Will return an instance if the request arguments can be understood
     # as a supported OpenID Message format.
     # Will return undef if this doesn't seem to be an OpenID Auth message.
     # Will croak if the $argumenty_thing is not of a suitable type.
     my $args = Net::OpenID::IndirectMessage->new($argumenty_thing);
-    
+
     # Determine which protocol version the message is using.
     # Currently this can be either 1 for 1.1 or 2 for 2.0.
     # Expect larger numbers for other versions in future.
     # Most callers don't really need to care about this.
     my $version = $args->protocol_version();
-    
+
     # Get a core argument value ("openid.mode")
     my $mode = $args->get("mode");
-    
+
     # Get an extension argument value
     my $nickname = $args->get_ext("http://openid.net/extensions/sreg/1.1", "nickname");
-    
+
     # Get hashref of all arguments in a given namespace
     my $sreg = $args->get_ext("http://openid.net/extensions/sreg/1.1");
 
