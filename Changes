@@ -1,10 +1,14 @@
 {{$NEXT}}
 
+    * Allow Plack::Request parameter objects for IndirectMessage
+
 1.030099_004 Oct 20 2011
 
-    * Improved HTML head extraction to skip CDATA and comments (Roger Crew)
+    * Improved HTML head extraction to skip CDATA and comments
 
-    * Fixed warning behavior of timing_indep_eq (Roger Crew)
+    * Fixed warning behavior of timing_indep_eq
+
+    * new comaintainer (Roger Crew)
 
 1.030099_003 Jan 01 2011
 
@@ -16,7 +20,7 @@
 1.030099_002 Dec 07 2010
 
     * Documentation tweaks (Robert Norris)
-    
+
     * Remove use of $& (Jess Robinson RT#63684)
 
 1.030099_001 Nov 06 2010
