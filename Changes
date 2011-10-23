@@ -1,5 +1,7 @@
 {{$NEXT}}
 
+1.11      Oct 22 2011
+
     * Allow Plack::Request parameter objects for IndirectMessage
 
 1.030099_004 Oct 20 2011
