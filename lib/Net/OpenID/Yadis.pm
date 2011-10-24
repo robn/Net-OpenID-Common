@@ -109,7 +109,11 @@ sub _get_contents {
     my $self = shift;
     my  ($url, $final_url_ref, $content_ref, $headers_ref) = @_;
 
-    my $res = Net::OpenID::URIFetch->fetch($url, $self->consumer, \&OpenID::util::_extract_head_markup_only);
+    # we do NOT do <body> elimination here because
+    # if it's an HTML document, we are only ever looking at the headers, and
+    # if it's a YADIS document, <body> elimination is not appropriate
+    # (YADIS is not HTML; film at 11)
+    my $res = Net::OpenID::URIFetch->fetch($url, $self->consumer, sub {  } );
 
     if ($res) {
         $$final_url_ref = $res->final_uri;
