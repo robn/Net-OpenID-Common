@@ -53,11 +53,31 @@ sub new {
         $enumer = sub { keys %{$p}; };
     }
     elsif (ref $what eq "CODE") {
+        my @keys = ();
+        my $enumerated;
         $getter = $what;
-        # We can't enumerate with just a coderef.
-        # OpenID 2 spec only requires enumeration to support
-        # extension namespaces, so we don't care too much.
-        $enumer = sub { return (); };
+        $enumer = sub {
+            unless ($enumerated) {
+                $enumerated = 1;
+                # In Consumer/Common 1.03 and predecessors, coderefs
+                # did not have to be able to enumerate all keys.
+                # Therefore, we must cope with legacy coderefs being
+                # passed in which don't expect to be called with no
+                # arguments, and then, most likely, fail in one of
+                # three ways:
+                #   (1) return empty list
+                #   (2) retrieve undef/'' value for undef/'' key.
+                #   (3) raise an error
+                # We normalize these all to empty list, which our
+                # caller can then recognize as obviously wrong
+                # and do something about it.
+                eval { @keys = $what->() };
+                @keys = ()
+                  if (@keys == 1 &&
+                      !(defined($keys[0]) && length($keys[0])));
+            }
+            return @keys;
+        }
     }
     else {
         $what = 'undef' if !defined $what;
@@ -120,11 +140,6 @@ sub get {
     my $self = shift;
     my $key = shift or Carp::croak("No argument name supplied to get method");
 
-    # NOTE: There is intentionally no way to get all of the keys in the core
-    # namespace because that means we don't need to be able to enumerate
-    # to support the core protocol, and there is no requirement to enumerate
-    # anyway.
-
     # Arguments can only contain letters, numbers, underscores and dashes
     Carp::croak("Invalid argument key $key") unless $key =~ /^[\w\-]+$/;
     Carp::croak("Too many arguments") if scalar(@_);
@@ -143,6 +158,27 @@ sub getter {
     my $self = shift;
 
     return $self->{getter};
+}
+
+# NOTE RE all_parameters():
+#
+# It was originally thought that enumeration of URL parameters was
+# unnecessary except to support extensions, i.e., that support of the
+# core protocol did not need it.  While this is true in OpenID 1.1, it
+# is not the case in OpenID 2.0 where check_authentication requires
+# sending back a complete copy of the positive assertion message
+# that was received indirectly.
+#
+# In cases where legacy client code is not supplying a real enumerator,
+# this routine will return an empty list and callers will need to
+# check for this.  Recall that actual messages in all versions of the
+# Openid protocol (thus far) are guaranteed to have at least an
+# 'openid.mode' parameter.
+
+sub all_parameters {
+    my $self = shift;
+
+    return $self->{enumer}->();
 }
 
 sub get_ext {
@@ -164,7 +200,7 @@ sub get_ext {
         my $prefix = "openid.$alias.";
         my $prefixlen = length($prefix);
         my $ret = {};
-        foreach my $key ($self->{enumer}->()) {
+        foreach my $key ($self->all_parameters) {
             next unless substr($key, 0, $prefixlen) eq $prefix;
             $ret->{substr($key, $prefixlen)} = $self->{getter}->($key);
         }
@@ -186,11 +222,11 @@ sub has_ext {
 sub _compute_extension_prefixes {
     my ($self) = @_;
 
-    return unless $self->{enumer};
+    # return unless $self->{enumer};
 
     $self->{extension_prefixes} = {};
     if ($self->protocol_version != 1) {
-        foreach my $key ($self->{enumer}->()) {
+        foreach my $key ($self->all_parameters) {
             next unless $key =~ /^openid\.ns\.(\w+)$/;
             my $alias = $1;
             my $uri = $self->{getter}->($key);
