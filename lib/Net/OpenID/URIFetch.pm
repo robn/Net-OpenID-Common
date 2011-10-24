@@ -36,8 +36,19 @@ use constant URI_MOVED_PERMANENTLY => 301;
 use constant URI_NOT_MODIFIED      => 304;
 use constant URI_GONE              => 410;
 
+# Fetch a document, either from cache or from a server
+#    URI -- location of document
+#    CONSUMER -- where to find user-agent and cache
+#    CONTENT_HOOK -- applied to freshly-retrieved document
+#      to normalize it into some particular format/structure
+#    PREFIX -- used as part of the cache key, distinguishes
+#      different content formats and must change whenever
+#      CONTENT_HOOK is switched to a new format; this way,
+#      cache entries from a previous run of this server that
+#      are using a different content format will not kill us.
 sub fetch {
-    my ($class, $uri, $consumer, $content_hook) = @_;
+    my ($class, $uri, $consumer, $content_hook, $prefix) = @_;
+    $prefix ||= '';
 
     if ($uri eq 'x-xrds-location') {
         Carp::confess("Buh?");
@@ -47,10 +58,7 @@ sub fetch {
     my $cache = $consumer->cache;
     my $ref;
 
-    # By prefixing the cache key, we can ensure we won't
-    # get left-over cache items from older versions of Consumer
-    # that used URI::Fetch.
-    my $cache_key = 'URIFetch:'.$uri;
+    my $cache_key = "URIFetch:${prefix}:${uri}";
 
     if ($cache) {
         if (my $blob = $cache->get($cache_key)) {
@@ -107,7 +115,7 @@ sub fetch {
     else {
         my $content = $res->content;
         my $final_uri = $res->request->uri->as_string();
-        my $final_cache_key = "URIFetch:".$final_uri;
+        my $final_cache_key = "URIFetch:${prefix}:${final_uri}";
 
         if ($res->content_encoding && $res->content_encoding eq 'gzip') {
             $content = Compress::Zlib::memGunzip($content);
