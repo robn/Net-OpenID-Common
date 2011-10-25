@@ -1,5 +1,15 @@
 {{$NEXT}}
 
+    * API change:  IndirectMessage->new(CODEREF)
+
+      CODEREF now needs to be able to also take 0 arguments and then
+      return a list of all URI parameter names in the request
+      (core protocol as of OpenID 2.0 now needs this functionality)
+
+    * New method:  IndirectMessage->all_parameters
+
+    * Stop attempting <body> removal on YADIS documents
+
 1.11      Oct 22 2011
 
     * Allow Plack::Request parameter objects for IndirectMessage
