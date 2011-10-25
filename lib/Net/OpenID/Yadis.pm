@@ -148,13 +148,23 @@ sub discover {
 
     $self->identity_url($final_url) if ($count < YR_XRDS);
 
-    my $doc_url;
-    if (($doc_url = $headers{'x-yadis-location'} || $headers{'x-xrds-location'}) && ($count < YR_XRDS)) {
+    if ($count < YR_XRDS and
+        my $doc_url = $headers{'x-yadis-location'} || $headers{'x-xrds-location'}
+       ) {
         return $self->discover($doc_url, YR_XRDS);
     }
-    elsif ( (split /;\s*/, $headers{'content-type'})[0] eq 'application/xrds+xml') {
+    elsif ( (my $ctype = (split /;\s*/, $headers{'content-type'})[0]) eq 'application/xrds+xml') {
         $self->xrd_url($final_url);
         return $self->parse_xrd($xrd);
+    }
+    elsif ( $ctype eq 'text/html' and
+            my ($meta) = grep {
+                my $heqv = lc($_->{'http-equiv'}||'');
+                $heqv eq 'x-yadis-location' || $heqv eq 'x-xrds-location'
+            }
+            @{OpenID::util::html_extract_linkmetas($xrd)->{meta}||[]}
+          ) {
+        return $self->discover($meta->{content}, YR_XRDS);
     }
     else {
         return $self->_fail($count == YR_GET ? "no_yadis_document" : "too_many_hops");
