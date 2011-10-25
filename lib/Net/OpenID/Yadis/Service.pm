@@ -63,6 +63,8 @@ Fetch the value of extension fields not provided directly by this class.
 
 If C<$namespace> is not specified, the default is the namespace whose name is the empty string.
 
+=back
+
 =head1 COPYRIGHT, WARRANTY, AUTHOR
 
 See L<Net::OpenID::Yadis> for author, copyrignt and licensing information.

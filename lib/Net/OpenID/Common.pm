@@ -31,6 +31,7 @@ use Math::BigInt;
 use Time::Local ();
 use MIME::Base64 ();
 use URI::Escape ();
+use HTML::Parser ();
 
 use constant VERSION_1_NAMESPACE => "http://openid.net/signon/1.1";
 use constant VERSION_2_NAMESPACE => "http://specs.openid.net/auth/2.0";
@@ -168,7 +169,10 @@ sub arg2int {
 }
 
 sub timing_indep_eq {
+    no warnings 'uninitialized';
     my ($x, $y)=@_;
+    warnings::warn('uninitialized','Use of uninitialized value in timing_indep_eq')
+	if (warnings::enabled('uninitialized') && !(defined($x) && defined($y)));
 
     return '' if length($x)!=length($y);
 
@@ -194,6 +198,111 @@ sub get_dh {
     $dh->generate_keys;
 
     return $dh;
+}
+
+
+################################################################
+# HTML parsing
+#
+# This is a stripped-down version of HTML::HeadParser
+# that only recognizes <link> and <meta> tags
+
+our @_linkmeta_parser_options =
+  (
+   api_version => 3,
+   ignore_elements => [qw(script style base isindex command noscript title object)],
+
+   start_document_h
+   => [sub {
+           my($p) = @_;
+           $p->{first_chunk} = 0;
+           $p->{found} = {};
+       },
+       "self"],
+
+   end_h
+   => [sub {
+           my($p,$tag) = @_;
+           $p->eof if $tag eq 'head'
+       },
+       "self,tagname"],
+
+   start_h
+   => [sub {
+           my($p, $tag, $attr) = @_;
+           if ($tag eq 'meta' || $tag eq 'link') {
+               if ($tag eq 'link' && ($attr->{rel}||'') =~ m/\s/) {
+                   # split <link rel="foo bar..." href="whatever"... />
+                   # into multiple <link>s
+                   push @{$p->{found}->{$tag}},
+                     map { +{%{$attr}, rel => $_} }
+                       split /\s+/,$attr->{rel};
+               }
+               else {
+                   push @{$p->{found}->{$tag}}, $attr;
+               }
+           }
+           elsif ($tag ne 'head' && $tag ne 'html') {
+               # stop parsing
+               $p->eof;
+           }
+       },
+       "self,tagname,attr"],
+
+   text_h
+   => [sub {
+           my($p, $text) = @_;
+           unless ($p->{first_chunk}) {
+               # drop Unicode BOM if found
+               if ($p->utf8_mode) {
+                   $text =~ s/^\xEF\xBB\xBF//;
+               }
+               else {
+                   $text =~ s/^\x{FEFF}//;
+               }
+               $p->{first_chunk}++;
+           }
+           # Normal text outside of an allowed <head> tag
+           # means start of body
+           $p->eof if ($text =~ /\S/);
+       },
+       "self,text"],
+  );
+
+# XXX this line is also in HTML::HeadParser; do we need it?
+# current theory is we don't because we're requiring at
+# least version 3.40 which is already pretty ancient.
+# 
+# *utf8_mode = sub { 1 } unless HTML::Entities::UNICODE_SUPPORT;
+
+our $_linkmeta_parser;
+
+# return { link => [links...], meta => [metas...] }
+# where each link/meta is a hash of the attribute values
+sub html_extract_linkmetas {
+    my $doc = shift;
+    $_linkmeta_parser ||= HTML::Parser->new(@_linkmeta_parser_options);
+    $_linkmeta_parser->parse($doc);
+    $_linkmeta_parser->eof;
+    return delete $_linkmeta_parser->{found};
+}
+
+### DEPRECATED, do not use, will be removed Real Soon Now
+sub _extract_head_markup_only {
+    my $htmlref = shift;
+
+    # kill all CDATA sections
+    $$htmlref =~ s/<!\[CDATA\[.*?\]\]>//sg;
+
+    # kill all comments
+    $$htmlref =~ s/<!--.*?-->//sg;
+    # ***FIX?*** Strictly speaking, SGML comments must have matched
+    # pairs of '--'s but almost nobody checks for this or even knows
+
+    # trim everything past the body.  this is in case the user doesn't
+    # have a head document and somebody was able to inject their own
+    # head.  -- brad choate
+    $$htmlref =~ s/<body\b.*//is;
 }
 
 1;

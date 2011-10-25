@@ -47,12 +47,37 @@ sub new {
         $getter = sub { scalar $what->param($_[0]); };
         $enumer = sub { $what->param; };
     }
+    elsif (ref $what eq "Plack::Request") {
+        my $p = $what->method eq 'POST' ? $what->body_parameters : $what->query_parameters;
+        $getter = sub { $p->get($_[0]); };
+        $enumer = sub { keys %{$p}; };
+    }
     elsif (ref $what eq "CODE") {
+        my @keys = ();
+        my $enumerated;
         $getter = $what;
-        # We can't enumerate with just a coderef.
-        # OpenID 2 spec only requires enumeration to support
-        # extension namespaces, so we don't care too much.
-        $enumer = sub { return (); };
+        $enumer = sub {
+            unless ($enumerated) {
+                $enumerated = 1;
+                # In Consumer/Common 1.03 and predecessors, coderefs
+                # did not have to be able to enumerate all keys.
+                # Therefore, we must cope with legacy coderefs being
+                # passed in which don't expect to be called with no
+                # arguments, and then, most likely, fail in one of
+                # three ways:
+                #   (1) return empty list
+                #   (2) retrieve undef/'' value for undef/'' key.
+                #   (3) raise an error
+                # We normalize these all to empty list, which our
+                # caller can then recognize as obviously wrong
+                # and do something about it.
+                eval { @keys = $what->() };
+                @keys = ()
+                  if (@keys == 1 &&
+                      !(defined($keys[0]) && length($keys[0])));
+            }
+            return @keys;
+        }
     }
     else {
         $what = 'undef' if !defined $what;
@@ -115,11 +140,6 @@ sub get {
     my $self = shift;
     my $key = shift or Carp::croak("No argument name supplied to get method");
 
-    # NOTE: There is intentionally no way to get all of the keys in the core
-    # namespace because that means we don't need to be able to enumerate
-    # to support the core protocol, and there is no requirement to enumerate
-    # anyway.
-
     # Arguments can only contain letters, numbers, underscores and dashes
     Carp::croak("Invalid argument key $key") unless $key =~ /^[\w\-]+$/;
     Carp::croak("Too many arguments") if scalar(@_);
@@ -138,6 +158,27 @@ sub getter {
     my $self = shift;
 
     return $self->{getter};
+}
+
+# NOTE RE all_parameters():
+#
+# It was originally thought that enumeration of URL parameters was
+# unnecessary except to support extensions, i.e., that support of the
+# core protocol did not need it.  While this is true in OpenID 1.1, it
+# is not the case in OpenID 2.0 where check_authentication requires
+# sending back a complete copy of the positive assertion message
+# that was received indirectly.
+#
+# In cases where legacy client code is not supplying a real enumerator,
+# this routine will return an empty list and callers will need to
+# check for this.  Recall that actual messages in all versions of the
+# Openid protocol (thus far) are guaranteed to have at least an
+# 'openid.mode' parameter.
+
+sub all_parameters {
+    my $self = shift;
+
+    return $self->{enumer}->();
 }
 
 sub get_ext {
@@ -159,7 +200,7 @@ sub get_ext {
         my $prefix = "openid.$alias.";
         my $prefixlen = length($prefix);
         my $ret = {};
-        foreach my $key ($self->{enumer}->()) {
+        foreach my $key ($self->all_parameters) {
             next unless substr($key, 0, $prefixlen) eq $prefix;
             $ret->{substr($key, $prefixlen)} = $self->{getter}->($key);
         }
@@ -181,11 +222,11 @@ sub has_ext {
 sub _compute_extension_prefixes {
     my ($self) = @_;
 
-    return unless $self->{enumer};
+    # return unless $self->{enumer};
 
     $self->{extension_prefixes} = {};
     if ($self->protocol_version != 1) {
-        foreach my $key ($self->{enumer}->()) {
+        foreach my $key ($self->all_parameters) {
             next unless $key =~ /^openid\.ns\.(\w+)$/;
             my $alias = $1;
             my $uri = $self->{getter}->($key);
@@ -209,45 +250,48 @@ Net::OpenID::IndirectMessage - Class representing a collection of namespaced arg
 This class acts as an abstraction layer over a collection of flat URL arguments
 which supports namespaces as defined by the OpenID Auth 2.0 specification.
 
-It also recognises when its is given OpenID 1.1 non-namespaced arguments and
+It also recognises when it is given OpenID 1.1 non-namespaced arguments and
 acts as if the relevant namespaces were present. In this case, it only
 supports the basic OpenID 1.1 arguments and the extension arguments
 for Simple Registration.
 
-This class can operate on a normal hashref, a L<CGI> object, an L<Apache>
-object, an L<Apache::Request> object, an L<Apache2::Request> object or an
-arbitrary C<CODE> ref that takes a key name as its first parameter and returns
-a value. However, if you use a coderef then extension arguments are not
-supported.
+This class can operate on
+a normal hashref,
+a L<CGI> object,
+an L<Apache> object,
+an L<Apache::Request> object,
+an L<Apache2::Request> object,
+a L<Plack::Request> object, or
+an arbitrary C<CODE> ref that takes a key name as its first parameter and returns a value.
+However, if you use a coderef then extension arguments are not supported.
 
 If you pass in a hashref or a coderef it is your responsibility as the caller
-to check the HTTP request method and pass in the correct set of arguments. If
-you use an Apache, Apache::Request, Apache2::Request or CGI object then this
-module will do the right thing automatically.
+to check the HTTP request method and pass in the correct set of arguments.
+For the other kinds of objects, this module will do the right thing automatically.
 
 =head1 SYNOPSIS
 
     use Net::OpenID::IndirectMessage;
-    
+
     # Pass in something suitable for the underlying flat dictionary.
     # Will return an instance if the request arguments can be understood
     # as a supported OpenID Message format.
     # Will return undef if this doesn't seem to be an OpenID Auth message.
     # Will croak if the $argumenty_thing is not of a suitable type.
     my $args = Net::OpenID::IndirectMessage->new($argumenty_thing);
-    
+
     # Determine which protocol version the message is using.
     # Currently this can be either 1 for 1.1 or 2 for 2.0.
     # Expect larger numbers for other versions in future.
     # Most callers don't really need to care about this.
     my $version = $args->protocol_version();
-    
+
     # Get a core argument value ("openid.mode")
     my $mode = $args->get("mode");
-    
+
     # Get an extension argument value
     my $nickname = $args->get_ext("http://openid.net/extensions/sreg/1.1", "nickname");
-    
+
     # Get hashref of all arguments in a given namespace
     my $sreg = $args->get_ext("http://openid.net/extensions/sreg/1.1");
 
