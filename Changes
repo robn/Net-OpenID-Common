@@ -1,5 +1,7 @@
 {{$NEXT}}
 
+1.12      Oct 25 2011
+
     * API change:  IndirectMessage->new(CODEREF)
 
       CODEREF now needs to be able to also take 0 arguments and then
